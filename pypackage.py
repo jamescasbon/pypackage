@@ -53,37 +53,55 @@ class Environment(object):
             os.remove(src)
             os.system('ln -s %(dst)s %(src)s' % locals())
 
-    def package(self, ptype):
+    def package(self, ptype, args=''):
         """ Call FPM to build the package """
-        subprocess.check_call(['fpm',
-                               '-s', 'dir',
-                               '-t', ptype,
-                               '-C', self.build_dir,
-                               '-n', self.name,
-                               self.root])
+        cmd = ['fpm',
+                '-s', 'dir',
+                '-t', ptype,
+                '-C', self.build_dir,
+                '-n', self.name]
+        if args:
+            cmd += args.split()
+        cmd.append(self.root)
+        subprocess.check_call(cmd)
 
 def main(args):
     build_dir = 'build'#tempfile.mkdtemp()
 
     if os.path.exists(build_dir):
-        shutil.rmtree(build_dir)
+        if args.delete:
+            shutil.rmtree(build_dir)
+        else:
+            print 'build directory exists, remove it or use -d'
+            sys.exit(1)
     os.makedirs(build_dir)
     try:
         env = Environment(build_dir, args.root, args.name, args.requirements)
         env.create()
         env.make_relocatable()
-        env.package(args.type)
+        env.package(args.type, args.fpm_args)
     finally:
-        pass
-        # shutil.rmtree(build_dir)
+        if not args.no_cleanup:
+            shutil.rmtree(build_dir)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=sys.modules[__name__].__doc__)
-    parser.add_argument('requirements')
-    parser.add_argument('--name')
-    parser.add_argument('--root')
-    parser.add_argument('-t', '--type', default='deb')
+    parser.add_argument('requirements',
+                        help='pip requirements file to use')
+    parser.add_argument('--name',
+                        help='name of package (defaults to the basename'
+                        'of the requirements file)')
+    parser.add_argument('--root',
+                        help='package root (default /home/$name)')
+    parser.add_argument('-t', '--type', default='deb',
+                        help='package type (default deb)')
+    parser.add_argument('-n', '--no-cleanup', action='store_true',
+                        help='do not remove build directory')
+    parser.add_argument('-d', '--delete', action='store_true',
+                        help='remove build directory before starting')
+    parser.add_argument('-f', '--fpm-args',
+                        help='extra args for fpm')
 
     logging.basicConfig(level=logging.DEBUG)
 
