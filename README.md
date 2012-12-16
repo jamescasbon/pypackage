@@ -7,12 +7,14 @@ Example
 -------
 
 Create a pip requirements file:
+    
     $ cat pyvcf.txt
     cython
     pysam
     pyvcf
 
 Run pypackage on it: 
+
     $ pypackage.py pyvcf.txt
     ...
     Created deb package {"path":"/home/james/Src/scratch/pyvcf_1.0_i386.deb"}
