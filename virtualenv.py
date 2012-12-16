@@ -1613,12 +1613,12 @@ def fixup_scripts(home_dir, new_shebang=None, use_activate=True):
                             % (filename, shebang))
             continue
         logger.notify('Making script %s relative' % filename)
-        lines = [new_shebang+'\n']
+        new_lines = [new_shebang+'\n']
         if use_activate:
-            lines += [activate+'\n']
-        lines += lines[1:]
+            new_lines += [activate+'\n']
+        new_lines += lines[1:]
         f = open(filename, 'wb')
-        f.write('\n'.join(lines).encode('utf-8'))
+        f.write('\n'.join(new_lines).encode('utf-8'))
         f.close()
 
 def fixup_pth_and_egg_link(home_dir, sys_path=None):
