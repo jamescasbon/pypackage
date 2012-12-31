@@ -23,7 +23,7 @@ class Environment(object):
 
     def __init__(self, build_dir, root, name, requirements):
         self.build_dir = build_dir
-        self.root = root
+        self.root = os.path.normpath(root.strip('/'))
         self.name = name
         self.requirements = requirements
 
