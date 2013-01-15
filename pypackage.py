@@ -23,7 +23,7 @@ class Environment(object):
 
     def __init__(self, build_dir, root, name, requirements):
         self.build_dir = build_dir
-        self.root = root
+        self.root = os.path.normpath(root.strip('/'))
         self.name = name
         self.requirements = requirements
 
@@ -42,6 +42,7 @@ class Environment(object):
             self._create()
             self._make_relocatable()
             self._make_path_hooks()
+            self._fix_activate()
         finally:
             os.chdir(cwd)
 
@@ -89,6 +90,15 @@ class Environment(object):
             src = os.path.join(dirname, name)
             dst = os.path.join('/', fpath)
             os.system('ln -s %(dst)s %(src)s' % locals())
+
+    def _fix_activate(self):
+        """ Fixes VIRTUAL_ENV variable in activate script"""
+        current_dir = os.getcwd()
+        builddir_activate = os.path.join(current_dir, self.root, 'bin', 'activate')
+        virtualenv_dir = os.path.join('/', self.root)
+        virtualenv_dir = virtualenv_dir.replace('/','\/')
+        command_string = "sed -i \"/^VIRTUAL_ENV/s/\\\"\(.*\)\\\"/\\\"%s\\\"/g\" %s" % (virtualenv_dir, builddir_activate)
+        os.system(command_string)
 
     def package(self, ptype, args=''):
         """ Call FPM to build the package """
